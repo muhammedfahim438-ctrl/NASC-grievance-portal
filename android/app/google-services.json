@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "418669433715",
+    "project_id": "nasc-grievance-portal",
+    "storage_bucket": "nasc-grievance-portal.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:418669433715:android:c33e1791a08c9eb302eb06",
+        "android_client_info": {
+          "package_name": "com.example.nasc_grievance_portal"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAKk7m8lufeOmVgklJLJUd9rzN73fuhAMA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
