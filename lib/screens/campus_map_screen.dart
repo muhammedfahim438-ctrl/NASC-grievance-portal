@@ -84,7 +84,7 @@ class _CampusMapScreenState extends State<CampusMapScreen> {
                               Icons.location_on,
                               size: isSelected ? 40 : 32,
                               color: isSelected
-                                  ? const Color(0xFF0F766E)
+                                  ? const Color(0xFF16767C)
                                   : Colors.redAccent,
                             ),
                           ),
@@ -143,7 +143,7 @@ class _CampusMapScreenState extends State<CampusMapScreen> {
                 _mapControlButton(
                   Icons.my_location,
                   _resetZoom,
-                  iconColor: const Color(0xFF0F766E),
+                  iconColor: const Color(0xFF16767C),
                 ),
               ],
             ),
@@ -211,7 +211,7 @@ class _CampusMapScreenState extends State<CampusMapScreen> {
             style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF0F766E),
+              color: Color(0xFF16767C),
             ),
           ),
           const SizedBox(height: 4),
@@ -220,7 +220,7 @@ class _CampusMapScreenState extends State<CampusMapScreen> {
           Text(
             location.distance,
             style: const TextStyle(
-              color: Color(0xFF006B5F),
+              color: Color(0xFF306C78),
               fontWeight: FontWeight.w500,
               fontSize: 12,
             ),
@@ -234,7 +234,7 @@ class _CampusMapScreenState extends State<CampusMapScreen> {
                   icon: const Icon(Icons.directions),
                   label: const Text('Get Directions'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0F766E),
+                    backgroundColor: const Color(0xFF16767C),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(

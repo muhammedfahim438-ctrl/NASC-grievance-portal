@@ -19,15 +19,8 @@ class TeacherHomeScreen extends StatefulWidget {
 }
 
 class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
-  // BUG FIX / CHANGE: this used to track 4 tabs (Home, Report, My Tickets,
-  // Profile) driving a stock BottomNavigationBar. That's been replaced with
-  // just 2 tabs - Report and Booking - styled like booking_dashboard_screen's
-  // pill nav. Index 0 = Report (this screen, unchanged), index 1 = Booking
-  // (pushes BookingDashboardScreen).
   int _currentTabIndex = 0;
 
-  // We'll cache the logged-in user's name/department here after
-  // we fetch it once from Firestore, so we don't re-fetch every rebuild.
   String _userName = 'Loading...';
   String _userDepartment = '';
   bool _loadingProfile = true;
@@ -38,9 +31,6 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
     _loadUserProfile();
   }
 
-  // Pulls the current user's name + department from the "users" collection.
-  // Why a separate fetch instead of StreamBuilder? Profile info rarely
-  // changes mid-session, so one read is enough — no need to keep listening.
   Future<void> _loadUserProfile() async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
@@ -73,8 +63,6 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
     }
   }
 
-  // A live stream of THIS teacher's own complaints, used to power
-  // the 4 stat cards (Active / Resolved / High Priority / Total).
   Stream<QuerySnapshot> _myComplaintsStream() {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     return FirebaseFirestore.instance
@@ -99,15 +87,10 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
     );
   }
 
-  // Handles taps on the new 2-tab bottom nav.
   void _onNavTap(int index) {
     if (index == 0) {
-      // Report tab - this IS the current screen, so just make sure it's
-      // shown as active. Nothing to navigate to.
       setState(() => _currentTabIndex = 0);
     } else if (index == 1) {
-      // Booking tab - open the Booking Dashboard, then reset back to
-      // the Report tab once they return here.
       setState(() => _currentTabIndex = 1);
       Navigator.push(
         context,
@@ -121,7 +104,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F5F9),
+      backgroundColor: const Color(0xFFF5F3EE),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -135,7 +118,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
               _buildQuickActionsGrid(),
               const SizedBox(height: 24),
               _buildComplaintSummary(),
-              const SizedBox(height: 80), // leaves room above bottom nav
+              const SizedBox(height: 80),
             ],
           ),
         ),
@@ -154,7 +137,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
           children: [
             CircleAvatar(
               radius: 28,
-              backgroundColor: const Color(0xFFE2E8F0),
+              backgroundColor: const Color(0xFFE3DFD3),
               child: _loadingProfile
                   ? const SizedBox(
                       width: 20,
@@ -166,7 +149,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF1E293B),
+                        color: Color(0xFF1E1D1A),
                       ),
                     ),
             ),
@@ -179,7 +162,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF1E293B),
+                    color: Color(0xFF1E1D1A),
                   ),
                 ),
                 Text(
@@ -188,7 +171,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
                       : 'Faculty Member',
                   style: const TextStyle(
                     fontSize: 13,
-                    color: Color(0xFF64748B),
+                    color: Color(0xFF6B6A63),
                   ),
                 ),
               ],
@@ -200,7 +183,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
             IconButton(
               onPressed: () {},
               icon: const Icon(Icons.notifications_outlined),
-              color: const Color(0xFF64748B),
+              color: const Color(0xFF6B6A63),
             ),
             Positioned(
               top: 10,
@@ -209,7 +192,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
                 width: 8,
                 height: 8,
                 decoration: const BoxDecoration(
-                  color: Color(0xFF0F766E),
+                  color: Color(0xFF16767C),
                   shape: BoxShape.circle,
                 ),
               ),
@@ -244,7 +227,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
             children: [
               Text(
                 "Today's Campus Status",
-                style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                style: TextStyle(fontSize: 12, color: Color(0xFF6B6A63)),
               ),
               SizedBox(height: 4),
               Text(
@@ -252,7 +235,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF006B5F),
+                  color: Color(0xFF306C78),
                 ),
               ),
             ],
@@ -260,12 +243,12 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: const Color(0xFFEAEDFF),
+              color: const Color(0xFFF0EDE1),
               borderRadius: BorderRadius.circular(999),
             ),
             child: const Icon(
               Icons.check_circle,
-              color: Color(0xFF006B5F),
+              color: Color(0xFF306C78),
             ),
           ),
         ],
@@ -327,7 +310,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
     bool isPrimary = false,
   }) {
     return Material(
-      color: isPrimary ? const Color(0xFF0F766E) : Colors.white,
+      color: isPrimary ? const Color(0xFF16767C) : Colors.white,
       borderRadius: BorderRadius.circular(12),
       elevation: 1,
       child: InkWell(
@@ -341,14 +324,14 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
             children: [
               Icon(
                 icon,
-                color: isPrimary ? Colors.white : const Color(0xFF0F766E),
+                color: isPrimary ? Colors.white : const Color(0xFF16767C),
               ),
               Text(
                 label,
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: isPrimary ? Colors.white : const Color(0xFF0F172A),
+                  color: isPrimary ? Colors.white : const Color(0xFF1E1D1A),
                 ),
               ),
             ],
@@ -358,8 +341,6 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
     );
   }
 
-  // Contact Maintenance card — expandable list with tap-to-call rows,
-  // matching the NASC3 mockup's dropdown-style quick action.
   Widget _buildContactMaintenanceCard() {
     return Container(
       padding: const EdgeInsets.all(12),
@@ -374,7 +355,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: const [
-              Icon(Icons.support_agent_outlined, color: Color(0xFF735B19), size: 20),
+              Icon(Icons.support_agent_outlined, color: Color(0xFFB6AB83), size: 20),
               Icon(Icons.arrow_drop_down, color: Colors.grey, size: 18),
             ],
           ),
@@ -401,13 +382,13 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
           Flexible(
             child: Text(
               label,
-              style: const TextStyle(fontSize: 10, color: Color(0xFF64748B)),
+              style: const TextStyle(fontSize: 10, color: Color(0xFF6B6A63)),
               overflow: TextOverflow.ellipsis,
             ),
           ),
           InkWell(
             onTap: () => _callNumber(number),
-            child: const Icon(Icons.call, size: 12, color: Color(0xFF0F766E)),
+            child: const Icon(Icons.call, size: 12, color: Color(0xFF16767C)),
           ),
         ],
       ),
@@ -425,7 +406,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: Color(0xFF1E293B),
+            color: Color(0xFF1E1D1A),
           ),
         ),
         const SizedBox(height: 8),
@@ -461,10 +442,10 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
               crossAxisSpacing: 10,
               childAspectRatio: 1.6,
               children: [
-                _statCard('$active', 'Active Reports', const Color(0xFF0F766E)),
-                _statCard('$resolved', 'Resolved', const Color(0xFF14B8A6)),
+                _statCard('$active', 'Active Reports', const Color(0xFF16767C)),
+                _statCard('$resolved', 'Resolved', const Color(0xFFB6AB83)),
                 _statCard('$highPriority', 'High Priority', const Color(0xFFBA1A1A)),
-                _statCard('$total', 'Total Submitted', const Color(0xFF0F172A)),
+                _statCard('$total', 'Total Submitted', const Color(0xFF1E1D1A)),
               ],
             );
           },
@@ -478,7 +459,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFFE3DFD3)),
       ),
       alignment: Alignment.center,
       child: Column(
@@ -496,7 +477,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
           Text(
             label,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+            style: const TextStyle(fontSize: 11, color: Color(0xFF6B6A63)),
           ),
         ],
       ),
@@ -504,8 +485,6 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
   }
 
   // ---------------- BOTTOM NAV (Report / Booking only) ----------------
-  // Replaces the old 4-item BottomNavigationBar with a custom 2-tab pill
-  // nav matching booking_dashboard_screen.dart's style exactly.
 
   Widget _buildBottomNav() {
     return Container(
@@ -541,20 +520,20 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
         decoration: BoxDecoration(
-          color: isActive ? const Color(0xFFE6F5F1) : Colors.transparent,
+          color: isActive ? const Color(0xFFDCEEED) : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 20, color: isActive ? const Color(0xFF0F766E) : const Color(0xFF64748B)),
+            Icon(icon, size: 20, color: isActive ? const Color(0xFF16767C) : const Color(0xFF6B6A63)),
             const SizedBox(height: 2),
             Text(
               label,
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-                color: isActive ? const Color(0xFF0F766E) : const Color(0xFF64748B),
+                color: isActive ? const Color(0xFF16767C) : const Color(0xFF6B6A63),
               ),
             ),
           ],

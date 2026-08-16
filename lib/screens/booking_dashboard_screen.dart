@@ -33,36 +33,9 @@ class _BookingDashboardScreenState extends State<BookingDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F5F9),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFF8FAFC),
-        elevation: 0,
-        foregroundColor: const Color(0xFF0F172A),
-        centerTitle: false,
-        // Hamburger/drawer trigger removed from the top bar as requested.
-        automaticallyImplyLeading: false,
-        title: const Text(
-          'Booking Dashboard',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF0F766E),
-          ),
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: CircleAvatar(
-              radius: 18,
-              backgroundColor: const Color(0xFFE2E8F0),
-              child: const Text(
-                'img',
-                style: TextStyle(fontSize: 10, color: Color(0xFF475569)),
-              ),
-            ),
-          ),
-        ],
-      ),
+      backgroundColor: const Color(0xFFF5F3EE),
+      // Top app bar removed entirely (was showing "Booking Dashboard"
+      // title + avatar) to free up vertical space for the content below.
       body: SafeArea(
         child: _buildBookingTab(),
       ),
@@ -130,7 +103,7 @@ class _BookingDashboardScreenState extends State<BookingDashboardScreen> {
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF1E293B),
+              color: Color(0xFF1E1D1A),
             ),
           ),
           const SizedBox(height: 10),
@@ -148,13 +121,13 @@ class _BookingDashboardScreenState extends State<BookingDashboardScreen> {
           children: [
             CircleAvatar(
               radius: 20,
-              backgroundColor: const Color(0xFFE2E8F0),
+              backgroundColor: const Color(0xFFE3DFD3),
               child: Text(
                 _userInitial,
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF1E293B),
+                  color: Color(0xFF1E1D1A),
                 ),
               ),
             ),
@@ -167,12 +140,12 @@ class _BookingDashboardScreenState extends State<BookingDashboardScreen> {
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF1E293B),
+                    color: Color(0xFF1E1D1A),
                   ),
                 ),
                 Text(
                   _userDepartment,
-                  style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                  style: const TextStyle(fontSize: 12, color: Color(0xFF6B6A63)),
                 ),
               ],
             ),
@@ -182,9 +155,9 @@ class _BookingDashboardScreenState extends State<BookingDashboardScreen> {
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            border: Border.all(color: const Color(0xFFE3DFD3)),
           ),
-          child: const Icon(Icons.notifications_outlined, size: 18, color: Color(0xFF0F766E)),
+          child: const Icon(Icons.notifications_outlined, size: 18, color: Color(0xFF16767C)),
         ),
       ],
     );
@@ -212,7 +185,7 @@ class _BookingDashboardScreenState extends State<BookingDashboardScreen> {
             children: [
               Text(
                 "Today's Booking Status",
-                style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                style: TextStyle(fontSize: 12, color: Color(0xFF6B6A63)),
               ),
               SizedBox(height: 4),
               Text(
@@ -220,7 +193,7 @@ class _BookingDashboardScreenState extends State<BookingDashboardScreen> {
                 style: TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF006B5F),
+                  color: Color(0xFF306C78),
                 ),
               ),
             ],
@@ -228,10 +201,10 @@ class _BookingDashboardScreenState extends State<BookingDashboardScreen> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: const Color(0xFFE6F5F1),
+              color: const Color(0xFFDCEEED),
               borderRadius: BorderRadius.circular(999),
             ),
-            child: const Icon(Icons.check_circle, color: Color(0xFF006B5F)),
+            child: const Icon(Icons.check_circle, color: Color(0xFF306C78)),
           ),
         ],
       ),
@@ -281,7 +254,7 @@ class _BookingDashboardScreenState extends State<BookingDashboardScreen> {
             _summaryBox(
               label: 'Total Bookings',
               value: total,
-              color: const Color(0xFF0F766E),
+              color: const Color(0xFF16767C),
             ),
             _summaryBox(
               label: 'Pending',
@@ -291,12 +264,12 @@ class _BookingDashboardScreenState extends State<BookingDashboardScreen> {
             _summaryBox(
               label: 'Approved',
               value: approved,
-              color: const Color(0xFF14B8A6),
+              color: const Color(0xFFB6AB83),
             ),
             _summaryBox(
               label: 'Completed',
               value: completed,
-              color: const Color(0xFF1E293B),
+              color: const Color(0xFF1E1D1A),
             ),
           ],
         );
@@ -310,7 +283,7 @@ class _BookingDashboardScreenState extends State<BookingDashboardScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFFE3DFD3)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
@@ -334,7 +307,7 @@ class _BookingDashboardScreenState extends State<BookingDashboardScreen> {
           Text(
             label,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+            style: const TextStyle(fontSize: 11, color: Color(0xFF6B6A63)),
           ),
         ],
       ),
@@ -349,7 +322,7 @@ class _BookingDashboardScreenState extends State<BookingDashboardScreen> {
     bool fullWidth = false,
   }) {
     return Material(
-      color: isPrimary ? const Color(0xFF0F766E) : Colors.white,
+      color: isPrimary ? const Color(0xFF16767C) : Colors.white,
       borderRadius: BorderRadius.circular(14),
       elevation: 1,
       child: InkWell(
@@ -366,12 +339,12 @@ class _BookingDashboardScreenState extends State<BookingDashboardScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: isPrimary ? Colors.white.withValues(alpha: 0.15) : const Color(0xFFF1F5F9),
+                  color: isPrimary ? Colors.white.withValues(alpha: 0.15) : const Color(0xFFF5F3EE),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
                   icon,
-                  color: isPrimary ? Colors.white : const Color(0xFF0F766E),
+                  color: isPrimary ? Colors.white : const Color(0xFF16767C),
                   size: 20,
                 ),
               ),
@@ -380,7 +353,7 @@ class _BookingDashboardScreenState extends State<BookingDashboardScreen> {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: isPrimary ? Colors.white : const Color(0xFF0F172A),
+                  color: isPrimary ? Colors.white : const Color(0xFF1E1D1A),
                 ),
               ),
             ],
@@ -426,20 +399,20 @@ class _BookingDashboardScreenState extends State<BookingDashboardScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
         decoration: BoxDecoration(
-          color: isActive ? const Color(0xFFE6F5F1) : Colors.transparent,
+          color: isActive ? const Color(0xFFDCEEED) : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 20, color: isActive ? const Color(0xFF0F766E) : const Color(0xFF64748B)),
+            Icon(icon, size: 20, color: isActive ? const Color(0xFF16767C) : const Color(0xFF6B6A63)),
             const SizedBox(height: 2),
             Text(
               label,
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-                color: isActive ? const Color(0xFF0F766E) : const Color(0xFF64748B),
+                color: isActive ? const Color(0xFF16767C) : const Color(0xFF6B6A63),
               ),
             ),
           ],

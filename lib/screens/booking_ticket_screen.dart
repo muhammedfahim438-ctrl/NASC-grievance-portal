@@ -15,17 +15,17 @@ class BookingTicketScreen extends StatelessWidget {
     final uid = FirebaseAuth.instance.currentUser?.uid;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F5F9),
+      backgroundColor: const Color(0xFFF5F3EE),
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF8FAFC),
+        backgroundColor: const Color(0xFFFCFBFA),
         elevation: 0,
-        foregroundColor: const Color(0xFF0F172A),
+        foregroundColor: const Color(0xFF1E1D1A),
         title: const Text(
           'My Bookings',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w600,
-            color: Color(0xFF0F766E),
+            color: Color(0xFF16767C),
           ),
         ),
       ),
@@ -47,7 +47,7 @@ class BookingTicketScreen extends StatelessWidget {
                   padding: EdgeInsets.all(24),
                   child: Text(
                     'No bookings yet.',
-                    style: TextStyle(color: Color(0xFF64748B), fontSize: 14),
+                    style: TextStyle(color: Color(0xFF6B6A63), fontSize: 14),
                   ),
                 ),
               );
@@ -68,7 +68,7 @@ class BookingTicketScreen extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                    border: Border.all(color: const Color(0xFFE3DFD3)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -80,13 +80,13 @@ class BookingTicketScreen extends StatelessWidget {
                             '#${docs[index].id.substring(0, 6).toUpperCase()}',
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF0F172A),
+                              color: Color(0xFF1E1D1A),
                             ),
                           ),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFE6F5F1),
+                              color: const Color(0xFFDCEEED),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(
@@ -94,7 +94,7 @@ class BookingTicketScreen extends StatelessWidget {
                               style: const TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFF0F766E),
+                                color: Color(0xFF16767C),
                               ),
                             ),
                           ),
@@ -103,13 +103,13 @@ class BookingTicketScreen extends StatelessWidget {
                       const SizedBox(height: 8),
                       Text(
                         data['purpose'] ?? data['title'] ?? 'Booking',
-                        style: const TextStyle(fontSize: 14, color: Color(0xFF1E293B)),
+                        style: const TextStyle(fontSize: 14, color: Color(0xFF1E1D1A)),
                       ),
                       if (createdAt != null) ...[
                         const SizedBox(height: 4),
                         Text(
                           DateFormat('MMM d, yyyy • hh:mm a').format(createdAt),
-                          style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                          style: const TextStyle(fontSize: 12, color: Color(0xFF6B6A63)),
                         ),
                       ],
                     ],

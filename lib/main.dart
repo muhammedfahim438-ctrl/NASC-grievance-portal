@@ -20,7 +20,7 @@ class MyApp extends StatelessWidget {
       title: 'NASC Grievance Portal',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF0F766E)),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF16767C)),
         useMaterial3: true,
       ),
       home: const LoginScreen(),

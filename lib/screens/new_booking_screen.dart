@@ -1,6 +1,7 @@
 // lib/screens/new_booking_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class NewBookingScreen extends StatefulWidget {
   const NewBookingScreen({super.key});
@@ -10,7 +11,6 @@ class NewBookingScreen extends StatefulWidget {
 }
 
 class _NewBookingScreenState extends State<NewBookingScreen> {
-  // ---- Location selection (single choice) ----
   String? _selectedLocation;
   final List<_LocationOption> _locations = const [
     _LocationOption('Auditorium', Icons.theaters_outlined),
@@ -19,7 +19,6 @@ class _NewBookingScreenState extends State<NewBookingScreen> {
     _LocationOption('Department', Icons.apartment_outlined),
   ];
 
-  // ---- Booking category selection (multi choice, each with a quantity) ----
   final List<_CategoryOption> _categories = const [
     _CategoryOption('Mic', Icons.mic_none),
     _CategoryOption('Speaker', Icons.speaker_outlined),
@@ -28,10 +27,13 @@ class _NewBookingScreenState extends State<NewBookingScreen> {
     _CategoryOption('Chairs', Icons.event_seat_outlined),
     _CategoryOption('Tables', Icons.table_bar_outlined),
     _CategoryOption('Carpets', Icons.layers_outlined),
-    _CategoryOption('Others', Icons.category_outlined),
   ];
-  // label -> quantity. A label only appears here once it's been selected.
+
   final Map<String, int> _selectedQuantities = {'Mic': 1};
+  final Map<String, TextEditingController> _quantityControllers = {};
+
+  bool _othersSelected = false;
+  final TextEditingController _othersController = TextEditingController();
 
   final TextEditingController _organizerController = TextEditingController();
   final TextEditingController _occasionController = TextEditingController();
@@ -43,10 +45,23 @@ class _NewBookingScreenState extends State<NewBookingScreen> {
   TimeOfDay? _timeTo;
 
   @override
+  void initState() {
+    super.initState();
+    for (final cat in _categories) {
+      _quantityControllers[cat.label] =
+          TextEditingController(text: '${_selectedQuantities[cat.label] ?? 1}');
+    }
+  }
+
+  @override
   void dispose() {
     _organizerController.dispose();
     _occasionController.dispose();
     _notesController.dispose();
+    _othersController.dispose();
+    for (final controller in _quantityControllers.values) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
@@ -56,6 +71,7 @@ class _NewBookingScreenState extends State<NewBookingScreen> {
         _selectedQuantities.remove(label);
       } else {
         _selectedQuantities[label] = 1;
+        _quantityControllers[label]?.text = '1';
       }
     });
   }
@@ -68,6 +84,26 @@ class _NewBookingScreenState extends State<NewBookingScreen> {
         _selectedQuantities.remove(label);
       } else {
         _selectedQuantities[label] = next;
+        _quantityControllers[label]?.text = '$next';
+      }
+    });
+  }
+
+  void _onQuantityTyped(String label, String value) {
+    final parsed = int.tryParse(value);
+    setState(() {
+      if (parsed == null || parsed <= 0) {
+        return;
+      }
+      _selectedQuantities[label] = parsed;
+    });
+  }
+
+  void _toggleOthers() {
+    setState(() {
+      _othersSelected = !_othersSelected;
+      if (!_othersSelected) {
+        _othersController.clear();
       }
     });
   }
@@ -130,9 +166,6 @@ class _NewBookingScreenState extends State<NewBookingScreen> {
       return;
     }
 
-    // TODO: once you're ready, save this booking to Firestore here the
-    // same way new_complaint_screen.dart saves a complaint document.
-    // For now this just confirms the form works end-to-end.
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Booking request submitted!')),
     );
@@ -142,11 +175,11 @@ class _NewBookingScreenState extends State<NewBookingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: const Color(0xFFFCFBFA),
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF8FAFC),
+        backgroundColor: const Color(0xFFFCFBFA),
         elevation: 0,
-        foregroundColor: const Color(0xFF0F172A),
+        foregroundColor: const Color(0xFF1E1D1A),
         centerTitle: true,
         title: Column(
           children: const [
@@ -155,12 +188,12 @@ class _NewBookingScreenState extends State<NewBookingScreen> {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: Color(0xFF0F766E),
+                color: Color(0xFF16767C),
               ),
             ),
             Text(
               'Request a venue and resources',
-              style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+              style: TextStyle(fontSize: 11, color: Color(0xFF6B6A63)),
             ),
           ],
         ),
@@ -179,6 +212,8 @@ class _NewBookingScreenState extends State<NewBookingScreen> {
               _sectionLabel('Booking Category'),
               const SizedBox(height: 8),
               _buildCategoryGrid(),
+              const SizedBox(height: 10),
+              _buildOthersBox(),
               const SizedBox(height: 20),
 
               _sectionLabel('Organizer Name'),
@@ -248,7 +283,7 @@ class _NewBookingScreenState extends State<NewBookingScreen> {
                 child: ElevatedButton(
                   onPressed: _submit,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0F766E),
+                    backgroundColor: const Color(0xFF16767C),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -274,7 +309,7 @@ class _NewBookingScreenState extends State<NewBookingScreen> {
         style: const TextStyle(
           fontSize: 13,
           fontWeight: FontWeight.w600,
-          color: Color(0xFF0F172A),
+          color: Color(0xFF1E1D1A),
         ),
         children: required
             ? const [
@@ -304,22 +339,22 @@ class _NewBookingScreenState extends State<NewBookingScreen> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
             decoration: BoxDecoration(
-              color: isSelected ? const Color(0xFFCFFAFE) : Colors.white,
+              color: isSelected ? const Color(0xFFDCEEED) : Colors.white,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: isSelected ? const Color(0xFF0F766E) : const Color(0xFFE2E8F0),
+                color: isSelected ? const Color(0xFF16767C) : const Color(0xFFE3DFD3),
                 width: isSelected ? 1.5 : 1,
               ),
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(loc.icon, size: 22, color: const Color(0xFF0F766E)),
+                Icon(loc.icon, size: 22, color: const Color(0xFF16767C)),
                 const SizedBox(height: 6),
                 Text(
                   loc.label,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 10, color: Color(0xFF334155)),
+                  style: const TextStyle(fontSize: 10, color: Color(0xFF3A3833)),
                 ),
               ],
             ),
@@ -339,7 +374,7 @@ class _NewBookingScreenState extends State<NewBookingScreen> {
       childAspectRatio: 2.4,
       children: _categories.map((cat) {
         final isSelected = _selectedQuantities.containsKey(cat.label);
-        final quantity = _selectedQuantities[cat.label];
+        final controller = _quantityControllers[cat.label]!;
 
         return InkWell(
           borderRadius: BorderRadius.circular(12),
@@ -347,10 +382,10 @@ class _NewBookingScreenState extends State<NewBookingScreen> {
           child: Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: isSelected ? const Color(0xFFCFFAFE) : const Color(0xFFF8FAFC),
+              color: isSelected ? const Color(0xFFDCEEED) : const Color(0xFFFCFBFA),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: isSelected ? const Color(0xFF0F766E) : const Color(0xFFE2E8F0),
+                color: isSelected ? const Color(0xFF16767C) : const Color(0xFFE3DFD3),
                 width: isSelected ? 1.5 : 1,
               ),
             ),
@@ -361,9 +396,9 @@ class _NewBookingScreenState extends State<NewBookingScreen> {
                     children: [
                       Row(
                         children: [
-                          Icon(cat.icon, size: 18, color: const Color(0xFF0F766E)),
+                          Icon(cat.icon, size: 18, color: const Color(0xFF16767C)),
                           const SizedBox(width: 6),
-                          Text(cat.label, style: const TextStyle(fontSize: 12, color: Color(0xFF0F172A))),
+                          Text(cat.label, style: const TextStyle(fontSize: 12, color: Color(0xFF1E1D1A))),
                         ],
                       ),
                       const SizedBox(height: 6),
@@ -381,15 +416,30 @@ class _NewBookingScreenState extends State<NewBookingScreen> {
                               constraints: const BoxConstraints(),
                               iconSize: 16,
                               onPressed: () => _changeQuantity(cat.label, -1),
-                              icon: const Icon(Icons.remove, color: Color(0xFF0F766E)),
+                              icon: const Icon(Icons.remove, color: Color(0xFF16767C)),
                             ),
-                            Text('$quantity', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                            SizedBox(
+                              width: 36,
+                              child: TextField(
+                                controller: controller,
+                                textAlign: TextAlign.center,
+                                keyboardType: TextInputType.number,
+                                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                                decoration: const InputDecoration(
+                                  isDense: true,
+                                  contentPadding: EdgeInsets.symmetric(vertical: 6),
+                                  border: InputBorder.none,
+                                ),
+                                onChanged: (value) => _onQuantityTyped(cat.label, value),
+                              ),
+                            ),
                             IconButton(
                               padding: EdgeInsets.zero,
                               constraints: const BoxConstraints(),
                               iconSize: 16,
                               onPressed: () => _changeQuantity(cat.label, 1),
-                              icon: const Icon(Icons.add, color: Color(0xFF0F766E)),
+                              icon: const Icon(Icons.add, color: Color(0xFF16767C)),
                             ),
                           ],
                         ),
@@ -399,14 +449,75 @@ class _NewBookingScreenState extends State<NewBookingScreen> {
                 : Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(cat.icon, size: 20, color: const Color(0xFF64748B)),
+                      Icon(cat.icon, size: 20, color: const Color(0xFF6B6A63)),
                       const SizedBox(width: 8),
-                      Text(cat.label, style: const TextStyle(fontSize: 12, color: Color(0xFF334155))),
+                      Text(cat.label, style: const TextStyle(fontSize: 12, color: Color(0xFF3A3833))),
                     ],
                   ),
           ),
         );
       }).toList(),
+    );
+  }
+
+  Widget _buildOthersBox() {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: _othersSelected ? const Color(0xFFDCEEED) : const Color(0xFFFCFBFA),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: _othersSelected ? const Color(0xFF16767C) : const Color(0xFFE3DFD3),
+          width: _othersSelected ? 1.5 : 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          InkWell(
+            onTap: _toggleOthers,
+            child: Row(
+              children: [
+                const Icon(Icons.category_outlined, size: 20, color: Color(0xFF6B6A63)),
+                const SizedBox(width: 8),
+                const Text('Others', style: TextStyle(fontSize: 12, color: Color(0xFF3A3833))),
+                const Spacer(),
+                Icon(
+                  _othersSelected ? Icons.check_circle : Icons.add_circle_outline,
+                  size: 18,
+                  color: const Color(0xFF16767C),
+                ),
+              ],
+            ),
+          ),
+          if (_othersSelected) ...[
+            const SizedBox(height: 8),
+            TextField(
+              controller: _othersController,
+              style: const TextStyle(fontSize: 13),
+              decoration: InputDecoration(
+                hintText: 'Type what else you need (no number required)',
+                hintStyle: const TextStyle(fontSize: 12, color: Color(0xFFB9B4A6)),
+                filled: true,
+                fillColor: Colors.white,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: Color(0xFFE3DFD3)),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: Color(0xFFE3DFD3)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: Color(0xFF16767C), width: 1.5),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 
@@ -417,21 +528,21 @@ class _NewBookingScreenState extends State<NewBookingScreen> {
       style: const TextStyle(fontSize: 13),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+        hintStyle: const TextStyle(fontSize: 12, color: Color(0xFFB9B4A6)),
         filled: true,
         fillColor: Colors.white,
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+          borderSide: const BorderSide(color: Color(0xFFE3DFD3)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+          borderSide: const BorderSide(color: Color(0xFFE3DFD3)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF0F766E), width: 1.5),
+          borderSide: const BorderSide(color: Color(0xFF16767C), width: 1.5),
         ),
       ),
     );
@@ -450,16 +561,16 @@ class _NewBookingScreenState extends State<NewBookingScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
+          border: Border.all(color: const Color(0xFFE3DFD3)),
         ),
         child: Row(
           children: [
-            Icon(icon, size: 16, color: const Color(0xFF0F766E)),
+            Icon(icon, size: 16, color: const Color(0xFF16767C)),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
                 label,
-                style: const TextStyle(fontSize: 12, color: Color(0xFF334155)),
+                style: const TextStyle(fontSize: 12, color: Color(0xFF3A3833)),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
