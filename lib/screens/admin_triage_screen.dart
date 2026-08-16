@@ -21,6 +21,19 @@ class _AdminTriageScreenState extends State<AdminTriageScreen> {
   bool _isSaving = false;
   bool _isUpdatingStatus = false;
 
+  // BUG FIX: this used to be read+mutated directly inside build() every
+  // time a new Firestore snapshot arrived (e.g. whenever you clicked
+  // "Assign Ticket" or "Update Status" the stream would fire again and
+  // silently overwrite _selectedPriority mid-build). That's fragile -
+  // Flutter's framework never gets told the state changed.
+  //
+  // Instead, we only want to seed _selectedPriority from Firestore ONCE,
+  // the first time the ticket's data arrives - after that, the admin's
+  // own taps on the priority pills should be the only thing that changes
+  // it. This flag makes sure the "seed from Firestore" logic only ever
+  // runs a single time.
+  bool _priorityInitialized = false;
+
   final List<String> _technicians = [
     'Ramesh - Electrician',
     'Suresh - Plumber',
@@ -146,8 +159,23 @@ class _AdminTriageScreenState extends State<AdminTriageScreen> {
                     ? DateFormat('MMM d, yyyy - hh:mm a').format(timestamp.toDate())
                     : 'Unknown date';
 
-                if (_selectedPriority == 'medium' && data['priority'] != null) {
-                  _selectedPriority = data['priority'];
+                // BUG FIX: seed the priority selector from Firestore exactly
+                // once, the proper way. We schedule the setState() to run
+                // right after this frame finishes (addPostFrameCallback)
+                // instead of mutating _selectedPriority mid-build. The
+                // _priorityInitialized flag guarantees this block only
+                // does its job on the very first snapshot - after that,
+                // only the admin tapping a priority pill can change it.
+                if (!_priorityInitialized) {
+                  _priorityInitialized = true;
+                  final initialPriority = data['priority'];
+                  if (initialPriority != null) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (mounted) {
+                        setState(() => _selectedPriority = initialPriority);
+                      }
+                    });
+                  }
                 }
 
                 return SingleChildScrollView(

@@ -1,1 +1,28 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"nasc-grievance-portal","appId":"1:418669433715:android:c33e1791a08c9eb302eb06","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"nasc-grievance-portal","configurations":{"android":"1:418669433715:android:c33e1791a08c9eb302eb06","ios":"1:418669433715:ios:19a6695d94a30f5d02eb06","macos":"1:418669433715:ios:19a6695d94a30f5d02eb06","web":"1:418669433715:web:61a5e99d4f0e051b02eb06","windows":"1:418669433715:web:104e55b60b050cc202eb06"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "nasc-grievance-portal",
+          "appId": "1:418669433715:android:c33e1791a08c9eb302eb06",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "nasc-grievance-portal",
+          "configurations": {
+            "android": "1:418669433715:android:c33e1791a08c9eb302eb06",
+            "ios": "1:418669433715:ios:19a6695d94a30f5d02eb06",
+            "macos": "1:418669433715:ios:19a6695d94a30f5d02eb06",
+            "web": "1:418669433715:web:61a5e99d4f0e051b02eb06",
+            "windows": "1:418669433715:web:104e55b60b050cc202eb06"
+          }
+        }
+      }
+    }
+  },
+  "firestore": {
+    "indexes": "firestore.indexes.json"
+  }
+}

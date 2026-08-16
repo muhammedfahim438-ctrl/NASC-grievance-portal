@@ -9,6 +9,7 @@ import 'new_complaint_screen.dart';
 import 'my_complaints_screen.dart';
 import 'campus_map_screen.dart';
 import 'login_screen.dart';
+import 'booking_dashboard_screen.dart';
 
 class TeacherHomeScreen extends StatefulWidget {
   const TeacherHomeScreen({super.key});
@@ -18,8 +19,12 @@ class TeacherHomeScreen extends StatefulWidget {
 }
 
 class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
-  // Which tab is active in the bottom nav bar. 0 = Home.
-  int _currentNavIndex = 0;
+  // BUG FIX / CHANGE: this used to track 4 tabs (Home, Report, My Tickets,
+  // Profile) driving a stock BottomNavigationBar. That's been replaced with
+  // just 2 tabs - Report and Booking - styled like booking_dashboard_screen's
+  // pill nav. Index 0 = Report (this screen, unchanged), index 1 = Booking
+  // (pushes BookingDashboardScreen).
+  int _currentTabIndex = 0;
 
   // We'll cache the logged-in user's name/department here after
   // we fetch it once from Firestore, so we don't re-fetch every rebuild.
@@ -74,7 +79,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     return FirebaseFirestore.instance
         .collection('complaints')
-        .where('reporterId', isEqualTo: uid)
+        .where('reporterUid', isEqualTo: uid)
         .snapshots();
   }
 
@@ -94,50 +99,21 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
     );
   }
 
+  // Handles taps on the new 2-tab bottom nav.
   void _onNavTap(int index) {
-    setState(() => _currentNavIndex = index);
-
-    if (index == 1) {
-      // Report tab -> New Complaint screen
+    if (index == 0) {
+      // Report tab - this IS the current screen, so just make sure it's
+      // shown as active. Nothing to navigate to.
+      setState(() => _currentTabIndex = 0);
+    } else if (index == 1) {
+      // Booking tab - open the Booking Dashboard, then reset back to
+      // the Report tab once they return here.
+      setState(() => _currentTabIndex = 1);
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => const NewComplaintScreen()),
+        MaterialPageRoute(builder: (context) => const BookingDashboardScreen()),
       ).then((_) {
-        // Reset back to Home tab when they return
-        setState(() => _currentNavIndex = 0);
-      });
-    } else if (index == 2) {
-      // My Tickets tab -> My Complaints screen
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const MyComplaintsScreen()),
-      ).then((_) {
-        setState(() => _currentNavIndex = 0);
-      });
-    } else if (index == 3) {
-      // Profile tab -> simple sign-out confirmation for now
-      // (swap this out once you build a real ProfileScreen)
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Account'),
-          content: Text('Signed in as $_userName'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Close'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _signOut();
-              },
-              child: const Text('Sign Out'),
-            ),
-          ],
-        ),
-      ).then((_) {
-        setState(() => _currentNavIndex = 0);
+        if (mounted) setState(() => _currentTabIndex = 0);
       });
     }
   }
@@ -159,8 +135,6 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
               _buildQuickActionsGrid(),
               const SizedBox(height: 24),
               _buildComplaintSummary(),
-              const SizedBox(height: 24),
-              _buildCategoriesRow(),
               const SizedBox(height: 80), // leaves room above bottom nav
             ],
           ),
@@ -308,7 +282,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
       physics: const NeverScrollableScrollPhysics(),
       mainAxisSpacing: 12,
       crossAxisSpacing: 12,
-      childAspectRatio: 1.15, // was 1.4 — taller cells so Contact Maintenance content fits
+      childAspectRatio: 1.15,
       children: [
         _buildActionCard(
           icon: Icons.report_problem_outlined,
@@ -386,8 +360,6 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
 
   // Contact Maintenance card — expandable list with tap-to-call rows,
   // matching the NASC3 mockup's dropdown-style quick action.
-  // Sizes are trimmed tight so it fits inside the grid cell without
-  // overflowing (see childAspectRatio above for the other half of this fix).
   Widget _buildContactMaintenanceCard() {
     return Container(
       padding: const EdgeInsets.all(12),
@@ -460,8 +432,6 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
         StreamBuilder<QuerySnapshot>(
           stream: _myComplaintsStream(),
           builder: (context, snapshot) {
-            // While waiting for the first snapshot, show zeros instead
-            // of a spinner — keeps the layout stable and feels faster.
             int active = 0, resolved = 0, highPriority = 0, total = 0;
 
             if (snapshot.hasData) {
@@ -533,90 +503,63 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
     );
   }
 
-  // ---------------- CATEGORIES ROW ----------------
+  // ---------------- BOTTOM NAV (Report / Booking only) ----------------
+  // Replaces the old 4-item BottomNavigationBar with a custom 2-tab pill
+  // nav matching booking_dashboard_screen.dart's style exactly.
 
-  Widget _buildCategoriesRow() {
-    final categories = [
-      {'icon': Icons.bolt, 'label': 'Electrical', 'color': const Color(0xFF0F766E)},
-      {'icon': Icons.plumbing, 'label': 'Plumbing', 'color': const Color(0xFF14B8A6)},
-      {'icon': Icons.computer, 'label': 'IT Support', 'color': const Color(0xFF005C51)},
-      {'icon': Icons.cleaning_services, 'label': 'Cleaning', 'color': const Color(0xFF64748B)},
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Categories',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF1E293B),
+  Widget _buildBottomNav() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 12,
+            offset: const Offset(0, -4),
           ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _navItem(index: 0, icon: Icons.bar_chart, label: 'Report'),
+            _navItem(index: 1, icon: Icons.confirmation_number_outlined, label: 'Booking'),
+          ],
         ),
-        const SizedBox(height: 8),
-        SizedBox(
-          height: 90,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: categories.length,
-            separatorBuilder: (context, index) => const SizedBox(width: 10),
-            itemBuilder: (context, index) {
-              final cat = categories[index];
-              return Container(
-                width: 90,
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: (cat['color'] as Color).withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        cat['icon'] as IconData,
-                        color: cat['color'] as Color,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      cat['label'] as String,
-                      style: const TextStyle(fontSize: 11),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ),
-      ],
+      ),
     );
   }
 
-  // ---------------- BOTTOM NAV ----------------
-
-  Widget _buildBottomNav() {
-    return BottomNavigationBar(
-      currentIndex: _currentNavIndex,
-      onTap: _onNavTap,
-      selectedItemColor: const Color(0xFF0F766E),
-      unselectedItemColor: const Color(0xFF64748B),
-      type: BottomNavigationBarType.fixed,
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Home'),
-        BottomNavigationBarItem(icon: Icon(Icons.add_circle_outline), label: 'Report'),
-        BottomNavigationBarItem(icon: Icon(Icons.assignment_outlined), label: 'My Tickets'),
-        BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Profile'),
-      ],
+  Widget _navItem({required int index, required IconData icon, required String label}) {
+    final isActive = _currentTabIndex == index;
+    return InkWell(
+      borderRadius: BorderRadius.circular(20),
+      onTap: () => _onNavTap(index),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+        decoration: BoxDecoration(
+          color: isActive ? const Color(0xFFE6F5F1) : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 20, color: isActive ? const Color(0xFF0F766E) : const Color(0xFF64748B)),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+                color: isActive ? const Color(0xFF0F766E) : const Color(0xFF64748B),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
