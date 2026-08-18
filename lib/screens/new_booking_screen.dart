@@ -2,6 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class NewBookingScreen extends StatefulWidget {
   const NewBookingScreen({super.key});
@@ -43,6 +45,11 @@ class _NewBookingScreenState extends State<NewBookingScreen> {
   DateTime? _dateTo;
   TimeOfDay? _timeFrom;
   TimeOfDay? _timeTo;
+
+  // NEW: tracks whether we are currently saving to Firestore.
+  // We use this to show a loading spinner and to stop the user
+  // from tapping "Submit" multiple times in a row.
+  bool _isSubmitting = false;
 
   @override
   void initState() {
@@ -152,7 +159,18 @@ class _NewBookingScreenState extends State<NewBookingScreen> {
     return time.format(context);
   }
 
-  void _submit() {
+  // Helper: turns a TimeOfDay ("2:30 PM") into a plain readable
+  // string so we can store it in Firestore (Firestore doesn't
+  // understand Flutter's TimeOfDay type directly).
+  String? _timeToStoredString(TimeOfDay? time) {
+    if (time == null) return null;
+    final hour = time.hour.toString().padLeft(2, '0');
+    final minute = time.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
+  }
+
+  Future<void> _submit() async {
+    // ---- Validation (same as before) ----
     if (_selectedLocation == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please choose a location.')),
@@ -166,10 +184,63 @@ class _NewBookingScreenState extends State<NewBookingScreen> {
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Booking request submitted!')),
-    );
-    Navigator.pop(context);
+    // Make sure someone is actually logged in before we try to save.
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('You must be logged in to book.')),
+      );
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+
+    try {
+      // Build the list of requested resources, e.g. "Mic x2, Chairs x30"
+      final resourceList = _selectedQuantities.entries
+          .map((entry) => {'item': entry.key, 'quantity': entry.value})
+          .toList();
+
+      if (_othersSelected && _othersController.text.trim().isNotEmpty) {
+        resourceList.add({
+          'item': _othersController.text.trim(),
+          'quantity': 1,
+        });
+      }
+
+      // IMPORTANT: field names below (bookedByUid, status, purpose,
+      // createdAt) must exactly match what BookingTicketScreen queries.
+      await FirebaseFirestore.instance.collection('bookings').add({
+        'bookedByUid': currentUser.uid,
+        'status': 'Pending', // BookingTicketScreen filters/groups by this
+        'purpose': _occasionController.text.trim(), // the "Occasion" field
+        'location': _selectedLocation,
+        'organizerName': _organizerController.text.trim(),
+        'resources': resourceList,
+        'dateFrom': _dateFrom != null ? Timestamp.fromDate(_dateFrom!) : null,
+        'dateTo': _dateTo != null ? Timestamp.fromDate(_dateTo!) : null,
+        'timeFrom': _timeToStoredString(_timeFrom),
+        'timeTo': _timeToStoredString(_timeTo),
+        'notes': _notesController.text.trim(),
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Booking request submitted!')),
+      );
+      Navigator.pop(context);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Something went wrong: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
   }
 
   @override
@@ -281,7 +352,7 @@ class _NewBookingScreenState extends State<NewBookingScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _submit,
+                  onPressed: _isSubmitting ? null : _submit,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF16767C),
                     foregroundColor: Colors.white,
@@ -289,10 +360,19 @@ class _NewBookingScreenState extends State<NewBookingScreen> {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                     elevation: 2,
                   ),
-                  child: const Text(
-                    'Submit Booking Request',
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-                  ),
+                  child: _isSubmitting
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text(
+                          'Submit Booking Request',
+                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                        ),
                 ),
               ),
             ],

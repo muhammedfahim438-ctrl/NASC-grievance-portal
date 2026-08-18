@@ -87,6 +87,126 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
     );
   }
 
+  // NEW: Tapping the profile avatar opens this bottom sheet.
+  // It shows who's logged in, and gives a Logout button.
+  void _showProfileMenu() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Small drag handle at the top, just for visual polish.
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE3DFD3),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 24,
+                      backgroundColor: const Color(0xFFE3DFD3),
+                      child: Text(
+                        _userName.isNotEmpty ? _userName[0].toUpperCase() : 'T',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1E1D1A),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _userName,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF1E1D1A),
+                            ),
+                          ),
+                          Text(
+                            _userDepartment.isNotEmpty ? _userDepartment : 'Faculty Member',
+                            style: const TextStyle(fontSize: 12, color: Color(0xFF6B6A63)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                const Divider(height: 1),
+                const SizedBox(height: 8),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.logout, color: Color(0xFFBA1A1A)),
+                  title: const Text(
+                    'Logout',
+                    style: TextStyle(
+                      color: Color(0xFFBA1A1A),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.pop(sheetContext); // close the bottom sheet first
+                    _confirmLogout();
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // NEW: A simple "are you sure?" dialog so a stray tap doesn't
+  // accidentally log the teacher out.
+  void _confirmLogout() {
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          title: const Text('Log out?'),
+          content: const Text('You will need to sign in again to access your account.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                _signOut();
+              },
+              style: TextButton.styleFrom(foregroundColor: const Color(0xFFBA1A1A)),
+              child: const Text('Logout'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _onNavTap(int index) {
     if (index == 0) {
       setState(() => _currentTabIndex = 0);
@@ -135,23 +255,33 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
       children: [
         Row(
           children: [
-            CircleAvatar(
-              radius: 28,
-              backgroundColor: const Color(0xFFE3DFD3),
-              child: _loadingProfile
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Text(
-                      _userName.isNotEmpty ? _userName[0].toUpperCase() : 'T',
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1E1D1A),
-                      ),
-                    ),
+            // NEW: wrapped in InkWell + ClipOval so the avatar is
+            // tappable, with a nice circular ripple effect on tap.
+            ClipOval(
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: _showProfileMenu,
+                  child: CircleAvatar(
+                    radius: 28,
+                    backgroundColor: const Color(0xFFE3DFD3),
+                    child: _loadingProfile
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text(
+                            _userName.isNotEmpty ? _userName[0].toUpperCase() : 'T',
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF1E1D1A),
+                            ),
+                          ),
+                  ),
+                ),
+              ),
             ),
             const SizedBox(width: 12),
             Column(

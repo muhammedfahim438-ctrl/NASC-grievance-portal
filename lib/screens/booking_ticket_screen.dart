@@ -30,95 +30,148 @@ class BookingTicketScreen extends StatelessWidget {
         ),
       ),
       body: SafeArea(
-        child: StreamBuilder<QuerySnapshot>(
-          stream: FirebaseFirestore.instance
-              .collection('bookings')
-              .where('bookedByUid', isEqualTo: uid)
-              .orderBy('createdAt', descending: true)
-              .snapshots(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-              return const Center(
+        child: uid == null
+            // NEW: if somehow no one is logged in, show a clear message
+            // instead of silently querying with uid = null.
+            ? const Center(
                 child: Padding(
                   padding: EdgeInsets.all(24),
                   child: Text(
-                    'No bookings yet.',
+                    'You need to be logged in to see your bookings.',
                     style: TextStyle(color: Color(0xFF6B6A63), fontSize: 14),
+                    textAlign: TextAlign.center,
                   ),
                 ),
-              );
-            }
-
-            final docs = snapshot.data!.docs;
-
-            return ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: docs.length,
-              itemBuilder: (context, index) {
-                final data = docs[index].data() as Map<String, dynamic>;
-                final createdAt = (data['createdAt'] as Timestamp?)?.toDate();
-
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: const Color(0xFFE3DFD3)),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            '#${docs[index].id.substring(0, 6).toUpperCase()}',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF1E1D1A),
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFDCEEED),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              (data['status'] ?? 'pending').toString(),
-                              style: const TextStyle(
-                                fontSize: 11,
+              )
+            : StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('bookings')
+                    .where('bookedByUid', isEqualTo: uid)
+                    .orderBy('createdAt', descending: true)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  // NEW: This is the important fix. Without this check,
+                  // a Firestore error (most commonly: "missing composite
+                  // index" when you combine where() + orderBy() on
+                  // different fields) was being silently swallowed and
+                  // shown as "No bookings yet." — hiding the real problem.
+                  if (snapshot.hasError) {
+                    debugPrint('BookingTicketScreen Firestore error: ${snapshot.error}');
+                    return Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.error_outline, color: Colors.redAccent, size: 32),
+                            const SizedBox(height: 12),
+                            const Text(
+                              'Could not load bookings.',
+                              style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFF16767C),
+                                color: Color(0xFF1E1D1A),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        data['purpose'] ?? data['title'] ?? 'Booking',
-                        style: const TextStyle(fontSize: 14, color: Color(0xFF1E1D1A)),
-                      ),
-                      if (createdAt != null) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          DateFormat('MMM d, yyyy • hh:mm a').format(createdAt),
-                          style: const TextStyle(fontSize: 12, color: Color(0xFF6B6A63)),
+                            const SizedBox(height: 6),
+                            Text(
+                              '${snapshot.error}',
+                              style: const TextStyle(fontSize: 12, color: Color(0xFF6B6A63)),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 6),
+                            const Text(
+                              'Tip: check your debug console for a Firestore link to create a missing index.',
+                              style: TextStyle(fontSize: 11, color: Color(0xFF6B6A63)),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
                         ),
-                      ],
-                    ],
-                  ),
-                );
-              },
-            );
-          },
-        ),
+                      ),
+                    );
+                  }
+
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    return const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(24),
+                        child: Text(
+                          'No bookings yet.',
+                          style: TextStyle(color: Color(0xFF6B6A63), fontSize: 14),
+                        ),
+                      ),
+                    );
+                  }
+
+                  final docs = snapshot.data!.docs;
+
+                  return ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: docs.length,
+                    itemBuilder: (context, index) {
+                      final data = docs[index].data() as Map<String, dynamic>;
+                      final createdAt = (data['createdAt'] as Timestamp?)?.toDate();
+
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: const Color(0xFFE3DFD3)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  '#${docs[index].id.substring(0, 6).toUpperCase()}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF1E1D1A),
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFDCEEED),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Text(
+                                    (data['status'] ?? 'pending').toString(),
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF16767C),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              data['purpose'] ?? data['title'] ?? 'Booking',
+                              style: const TextStyle(fontSize: 14, color: Color(0xFF1E1D1A)),
+                            ),
+                            if (createdAt != null) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                DateFormat('MMM d, yyyy • hh:mm a').format(createdAt),
+                                style: const TextStyle(fontSize: 12, color: Color(0xFF6B6A63)),
+                              ),
+                            ],
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
       ),
     );
   }
